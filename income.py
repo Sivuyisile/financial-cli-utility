@@ -21,4 +21,6 @@ def get_income(): #ensuring the income is always in 2 decimals
             print("Invalid input. Please enter a valid numeric amount.")
 
 if __name__ == "__main__":
-    get_income()                                                                                                                                                                                                                     
+    get_income()                                        
+
+#I will ofcourse need to store all of this somewhere
