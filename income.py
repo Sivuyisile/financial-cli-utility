@@ -23,4 +23,4 @@ def get_income(): #ensuring the income is always in 2 decimals
 if __name__ == "__main__":
     get_income()                                        
 
-#I will ofcourse need to store all of this somewhere
+#I will ofcourse need to store all of this somewhere - DONE (file_manager.py)

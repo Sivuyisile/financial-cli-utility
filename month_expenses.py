@@ -2,6 +2,7 @@ from datetime import datetime
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
 from expenses_cli import exps_entry_prompt
+from income import get_income
 
 category_map = {
     1: "Housing/Rent",
@@ -14,8 +15,13 @@ category_map = {
 
 def item_total_calc(quantity, price):
 
+    if not isinstance(quantity, int) or isinstance(quantity, bool):
+        raise ValueError('Quantity cannot be a string value.')
+    if not isinstance(price, Decimal):
+        raise ValueError('Price cannot be a string value.')
+#type checking above, BEFORE comparing anything because obviously comparing different types throws errors
     if quantity < 1:
-        raise ValueError("Quantity must at least be 1.")
+        raise ValueError("Quantity must be at least 1.")
     #I have to 'raise' it instead of just returning, as 'return' returns the error object as data
     elif price < 0:
         raise ValueError("Price cannot be negative.")
@@ -25,7 +31,8 @@ def item_total_calc(quantity, price):
 
 def grand_total_calc(expense_dict):
 
-    return sum(expense_dict.values(), Decimal("0.01"))
+    return sum(expense_dict.values(), Decimal("0.00"))
+    #changed from '0.01' to '0.00' because sum() uses the 2nd argument as a starting value - so each total would be inflated by 1 cent
 
 
 def add_new_expense_or_update(expense_dict, category, item, amount):
@@ -38,7 +45,7 @@ def add_new_expense_or_update(expense_dict, category, item, amount):
         return True, prev_amount
     
     expense_dict[item_key] = amount
-    return False, Decimal("0.01")
+    return False, Decimal("0.00")
  
 
 def month_expenses():
@@ -48,6 +55,9 @@ def month_expenses():
     this_month = datetime.now().strftime("%B %Y") 
 
     print(f"Expense tracker: {this_month}\n")
+
+    user_income = get_income()
+    print(f"Recorded income: R{user_income:.2f}\n")
 
     keep_going = True
 
@@ -65,7 +75,13 @@ def month_expenses():
         else:
             print(f"Thank you. {user_exps_item} has been added to {chosen_category} at {item_total}")
 
-    return monthly_expenses_dict
+    total_expenses = grand_total_calc(monthly_expenses_dict)
+    rem_balance = user_income - total_expenses
+
+    print("---Summary---")
+    print(f"Income: {user_income:.2f}\nTotal expenses: {total_expenses:.2f}\nAvailable balance: {rem_balance:.2f}\n")
+
+    return monthly_expenses_dict, user_income, total_expenses, rem_balance
 
 
 if __name__ == "__main__":

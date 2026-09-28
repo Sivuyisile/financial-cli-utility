@@ -1,3 +1,6 @@
+#newn notes
+import os
+ 
 import csv
 from datetime import datetime
 
@@ -10,14 +13,17 @@ def export_to_csv(expenses_dict):
         return
 
     this_month = datetime.now().strftime('%B %Y')
-    csv_file_name = f'expense_tracker_{this_month.replace(' ', '_')}.csv'
+    csv_file_name = f'expense_tracker_{this_month.replace(" ", "_")}.csv'
 
-    with open(csv_file_name, mode='w', newline='') as file_to_output:
+    #new notes
+    file_exists = os.path.exists(csv_file_name)
+
+    with open(csv_file_name, mode='a', newline='') as file_to_output:
 
         csv_writer = csv.writer(file_to_output, delimiter=',')
 
-        #I have to remember headings as well
-        csv_writer.writerow(['Category', 'Item', 'Amount (R)']) #headings first
+        if not file_exists: #new notes
+            csv_writer.writerow(['Category', 'Item', 'Amount (R)']) #headings first
 
         for (category, item), amount in expenses_dict.items():
                 csv_writer.writerow([category, item.title(), f'{amount:.2f}'])
