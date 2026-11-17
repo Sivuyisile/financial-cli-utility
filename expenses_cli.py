@@ -45,45 +45,49 @@ def select_category_prompt(category_map):       #build strictly as a CLI interfa
 
 def exps_entry_prompt(expense_dict, category_list):
 
-    chosen_category = select_category_prompt(category_list)
+    chosen_category = select_category_prompt(category_list).strip().title()
     this_month = datetime.now().strftime('%B %Y')
 
     while True:
     
-        user_exps_item = input(f"Enter the expense title/name for your '{chosen_category}' expense: ").strip().lower()
+        #user_exps_item = input(f"Enter the expense title/name for your '{chosen_category}' expense: ").strip().lower()
+        user_exps_item = input(f"Enter the expense title/name for your '{chosen_category}' expense: ").strip().title()
 
-        while True:
-            try:
-                raw_user_exps_amount = input("Enter the item's price: ").strip()
-                user_exps_amount = Decimal(raw_user_exps_amount)
-                if user_exps_amount < 0:
-                    print("Error: An item's price cannot be negative.")
-                    continue
-                break
-            except InvalidOperation:
-                print("Error: Please enter a valid price.")
-                continue
+        matching_key = next(((category, item) for category, item in expense_dict.keys() if item.lower() == user_exps_item.lower()), None)
 
-        while True:
-            try:
-                user_exps_qty = int(input("Enter the item's quantity: "))
+        if matching_key:
+            existing_category, existing_item = matching_key
+            existing_val, existing_qty = expense_dict[matching_key]
 
-                if not user_exps_qty:
-                    print("Error: The item's quantity must be at least 1.")
-                    continue
-                elif user_exps_qty < 0:
-                    print("Error: An item's quantity cannot be negative.")
-                    continue
-                else:
-                    break
-            except ValueError:
-                print("Please enter a whole number")
-                continue
+            stored_val = existing_val * existing_qty
 
-        if (chosen_category, user_exps_item) in expense_dict:
+            print(f"{user_exps_item} already exists in your {existing_category} category, valued at {stored_val}.")
 
-            existing_val = expense_dict[(chosen_category, user_exps_item)]
-            print(f"{user_exps_item} already exists, valued at {existing_val}.")
+            ###
+            #loop / code block to ask if they want to keep it in the same category, or if they want to move it to their newly/currently chosen category
+            if existing_category.lower() != chosen_category.lower():
+
+                while True:
+
+                    move_categories = input(f"Do you wish to move {user_exps_item} from '{existing_category}' to '{chosen_category}'?\n1 for 'Yes':\n2 for 'No':\n").strip().lower()
+
+                    if move_categories in ('1', 'yes'):
+                        
+                        old_key = (existing_category, existing_item)
+                        new_key = (chosen_category, existing_item)
+
+                        expense_dict.pop(old_key) #so as to not have orphaned data after moving the 'key' from its original category to its new one
+
+                        existing_category = chosen_category
+                        matching_key = new_key
+                        break
+                    elif move_categories in ('2', 'no'):
+                        #move on to the price loop
+                        chosen_category = existing_category
+                        break
+                    else:
+                        print("Please enter '1' for 'Yes', or '2' for 'No':")
+                        continue
 
             while True:
 
@@ -103,15 +107,70 @@ def exps_entry_prompt(expense_dict, category_list):
                             break
                         except InvalidOperation:
                             print("Error: Please enter a valid price.")
-
-                    break   #leaving the override choice loop
+                    break   #leaving the override price choice loop
 
                 elif override_price_value in ('2', 'no'):
+                    user_exps_amount = existing_val
                     break
                 else:
                     print("Error: Invalid input. Please enter '1' or '2'.")
 
-                    
+#while loop here?
+            while True:
+
+                override_quantity = input("Do you wish to change/update this item's quantity?\n1 for 'Yes':\n2 for 'No':\n").strip().lower()
+
+                if override_quantity in ('1', 'yes'):
+                    while True:
+                        raw_user_exps_quantity = input("Enter the item's new quantity: ").strip()
+
+                        try:
+                            user_exps_qty = int(raw_user_exps_quantity)
+
+                            if user_exps_qty < 0:
+                                print("Error: The item cannot have a negative quantity.")
+                                continue
+                            break      
+                        except ValueError:
+                            print("Please enter a valid whole number quantity.")
+                    break
+
+                elif override_quantity in ('2', 'no'):
+                    user_exps_qty = existing_qty
+                    break
+                else:
+                    print("Error: Invalid input. Please enter '1' or '2'.")
+
+
+        else:
+            while True:
+                try:
+                    raw_user_exps_amount = input("Enter the item's price: ").strip()
+                    user_exps_amount = Decimal(raw_user_exps_amount)
+                    if user_exps_amount < 0:
+                        print("Error: An item's price cannot be negative.")
+                        continue
+                    break
+                except InvalidOperation:
+                    print("Error: Please enter a valid price.")
+                    continue
+
+            while True:
+                try:
+                    user_exps_qty = int(input("Enter the item's quantity: "))
+
+                    if not user_exps_qty:
+                        print("Error: The item's quantity must be at least 1.")
+                        continue
+                    elif user_exps_qty < 0:
+                        print("Error: An item's quantity cannot be negative.")
+                        continue
+                    else:
+                        break
+                except ValueError:
+                    print("Please enter a whole number")
+                    continue
+
 
         this_month = datetime.now().strftime("%B %Y") 
 

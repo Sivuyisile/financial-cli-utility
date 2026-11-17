@@ -31,21 +31,30 @@ def item_total_calc(quantity, price):
 
 def grand_total_calc(expense_dict):
 
-    return sum(expense_dict.values(), Decimal("0.00"))
-    #changed from '0.01' to '0.00' because sum() uses the 2nd argument as a starting value - so each total would be inflated by 1 cent
+    total = Decimal("0.00")
+
+    for amount, quantity in expense_dict.values():
+        calculated_total = amount * quantity 
+        #"item_total" is actually just the unit price passed in here
+        total += calculated_total
+
+    return total
 
 
-def add_new_expense_or_update(expense_dict, category, item, amount):
+def add_new_expense_or_update(expense_dict, category, item, amount, quantity):
 
-    item_key = (category, item.strip().lower())
+    passed_category = category.strip().title()
+    passed_item = item.strip().title()
+
+    item_key = (passed_category, passed_item)
 
     if item_key in expense_dict:
-        prev_amount = expense_dict[item_key]
-        expense_dict[item_key] = amount
-        return True, prev_amount
-    
-    expense_dict[item_key] = amount
-    return False, Decimal("0.00")
+        prev_amount, prev_quantity = expense_dict[item_key]
+        expense_dict[item_key] = amount, quantity
+        return True, prev_amount, prev_quantity
+    elif item_key not in expense_dict:
+        expense_dict[item_key] = amount, quantity
+        return False, Decimal("0.00"), 0
  
 
 def month_expenses():
@@ -65,9 +74,9 @@ def month_expenses():
 
         user_exps_amount, user_exps_item, user_exps_qty, chosen_category, keep_going = exps_entry_prompt(monthly_expenses_dict,category_map) 
 
-        item_total = item_total_calc(user_exps_qty, user_exps_amount)
+        is_override, old_val, old_qty = add_new_expense_or_update(monthly_expenses_dict, chosen_category, user_exps_item, user_exps_amount, user_exps_qty)
 
-        is_override, old_val = add_new_expense_or_update(monthly_expenses_dict, chosen_category, user_exps_item, item_total)
+        item_total = item_total_calc(user_exps_qty, user_exps_amount)
 
         #saw someone do this - add_new_expense_or_update()
         if is_override:

@@ -27,5 +27,6 @@ def export_to_csv(expenses_dict):
 
         for (category, item), amount in expenses_dict.items():
                 csv_writer.writerow([category, item.title(), f'{amount:.2f}'])
+                #csv_writer.writerow(print(expenses_dict)) - debug attempt
 
     print(f'Success: Expenses exported to {csv_file_name}')
